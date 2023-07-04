@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Calculator</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .calculator {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-gap: 10px;
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        /* Custom styles for the toggle button */
+        .toggle-icon {
+            cursor: pointer;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+        }
+
+        /* Custom styles to hide the history content by default */
+        .history-content {
+            display: none;
+            overflow-y: auto;
+            max-height: 600px; /* Fixed height for the history content */
+        }
+
+        /* Custom styles to show the history content when active class is applied */
+        .history-toggle.active .history-content {
+            display: block;
+        }
+
+        .history-item {
+            margin-bottom: 10px;
+        }
+
+        .equation {
+            font-weight: bold;
+        }
+
+        .result {
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="container">
+                    <h1>Calculator</h1>
+                    <div class="calculator">
+                        <input type="text" id="display" readonly>
+                        <button class="btn btn-primary" onclick="appendCharacter('1')">1</button>
+                        <button class="btn btn-primary" onclick="appendCharacter('2')">2</button>
+                        <button class="btn btn-primary" onclick="appendCharacter('3')">3</button>
+                        <button class="btn btn-primary" onclick="appendCharacter('4')">4</button>
+                        <button class="btn btn-primary" onclick="appendCharacter('5')">5</button>
+                        <button class="btn btn-primary" onclick="appendCharacter('6')">6</button>
+                        <button class="btn btn-primary" onclick="appendCharacter('7')">7</button>
+                        <button class="btn btn-primary" onclick="appendCharacter('8')">8</button>
+                        <button class="btn btn-primary" onclick="appendCharacter('9')">9</button>
+                        <button class="btn btn-primary" onclick="appendCharacter('0')">0</button>
+                        <button class="btn btn-primary" onclick="appendCharacter('+')">+</button>
+                        <button class="btn btn-primary" onclick="appendCharacter('-')">-</button>
+                        <button class="btn btn-primary" onclick="appendCharacter('*')">*</button>
+                        <button class="btn btn-primary" onclick="appendCharacter('/')">/</button>
+                        <button class="btn btn-primary" onclick="clearDisplay()">C</button>
+                        <button class="btn btn-success" onclick="performCalculation()">=</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <aside>
+                    <div class="container">
+                        <h2>History:</h2>
+                        <div class="history-toggle">
+                            <div class="toggle-icon" onclick="toggleHistory()">
+                                <i class="fa fa-history"></i>
+                            </div>
+                            <div class="history-content">
+                                {% if history %}
+                                    <div class="row">
+                                        {% for entry in history %}
+                                            <div class="col-lg-12 history-item">
+                                                <div class="equation"><strong>Equation:</strong> {{ entry.equation }}</div>
+                                                <div class="result"><strong>Result:</strong> {{ entry.result }}</div>
+                                                <div class="created-on"><strong>Created On:</strong> {{ entry.created_on }}</div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <p>No history available.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let display = document.getElementById('display');
+        let equation = '';
+
+        function appendCharacter(character) {
+            equation += character;
+            display.value = equation;
+        }
+
+        function performCalculation() {
+            let result;
+            try {
+                result = eval(equation);
+            } catch (error) {
+                result = 'Invalid expression';
+            }
+            equation += ' = ' + result;
+            display.value = equation;
+            saveHistory(equation, result);
+            equation = '';
+        }
+
+        function clearDisplay() {
+            display.value = '';
+            equation = '';
+        }
+
+        function saveHistory(equation, result) {
+            let xhr = new XMLHttpRequest();
+            xhr.open('POST', '/');
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    console.log('History inserted successfully.');
+                } else {
+                    console.log('Failed to insert history.');
+                }
+            };
+            xhr.send(JSON.stringify({ equation: equation, result: result }));
+        }
+
+        function toggleHistory() {
+            let historyToggle = document.querySelector('.history-toggle');
+            historyToggle.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>
